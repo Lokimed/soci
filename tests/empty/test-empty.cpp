@@ -5,6 +5,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#include "soci/boost-optional.h"
 #include "soci/soci.h"
 #include "soci/empty/soci-empty.h"
 
@@ -17,6 +18,8 @@
 #include <string>
 #include <cstdlib>
 #include <ctime>
+
+#include <boost/optional.hpp>
 
 using namespace soci;
 
@@ -94,12 +97,18 @@ TEST_CASE("Dummy test", "[empty]")
     sql << query, use(i, ind);
 
     std::vector<int> numbers(100);
+    const std::vector<int>& cref_numbers = numbers;
     sql << "insert", use(numbers);
+    sql << "insert", use(cref_numbers);
+    sql << "insert", use(cref_numbers, "test_name");
     sql << "select", into(numbers);
 
     std::vector<indicator> inds(100);
     sql << "insert", use(numbers, inds);
     sql << "select", into(numbers, inds);
+
+    std::vector<boost::optional<int> > optional_int(100);
+    const std::vector<boost::optional<int> >& cref_optional_int = optional_int;
 
     {
         statement st = (sql.prepare << "select", into(i));
@@ -128,6 +137,18 @@ TEST_CASE("Dummy test", "[empty]")
     {
         statement st = (sql.prepare << "insert", use(i, ind));
         statement sq = (sql.prepare << query, use(i, ind));
+    }
+    {
+        statement st = (sql.prepare << "insert", use(optional_int));
+        statement sq = (sql.prepare << query, use(optional_int));
+        statement bst = (sql.prepare << "insert", use(optional_int, "test"));
+        statement bsq = (sql.prepare << query, use(optional_int, "test"));
+    }
+    {
+        statement st = (sql.prepare << "insert", use(cref_optional_int));
+//        statement sq = (sql.prepare << query, use(cref_optional_int));
+//        statement bst = (sql.prepare << "insert", use(cref_optional_int, "test"));
+//        statement bsq = (sql.prepare << query, use(cref_optional_int, "test"));
     }
     {
         statement st = (sql.prepare << "insert", use(numbers));
